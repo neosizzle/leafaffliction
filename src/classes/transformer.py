@@ -60,7 +60,6 @@ class Transformer:
 		gaussian_k = self.params['gaus_k']
 		s_mblur = pcv.gaussian_blur(s_thresh, (gaussian_k, gaussian_k))
 
-		# TODO: export s_mblur here
 		res['blur'] = s_mblur
 
 		# # Use another channel (LAB) to do grayscaling and join with the origninal
@@ -72,7 +71,6 @@ class Transformer:
 		# remove background, yayyyy
 		masked = pcv.apply_mask(img, s_mblur, 'white')
 
-		# TODO: export masked here
 		res['masked'] = masked
 
 		# repeat something similar to clear up and remaining
@@ -108,21 +106,17 @@ class Transformer:
 		# reapply mask
 		masked2 = pcv.apply_mask(masked, roi_mask, 'white')
 
-		# TODO: export final mask here
 		res['final'] = masked2
 
-		# TODO export img_with_roi here using below method to render
 		# examine roi rectangle
 		img_with_roi = masked2.copy()
 		cv2.rectangle(img_with_roi, (roi_x, roi_y), (roi_x + roi_width, roi_y + roi_height), color=(255, 0, 0), thickness=2)
 		res['roi'] = img_with_roi
-		# cv2.imwrite(f"roi_{filename}", img_with_roi)
 
 		# this is to make validate our work so far.. the borders
 		# should match the target item we are trying to analyze
 		size_analysis = pcv.analyze.size(img=img, labeled_mask=roi_mask)
 		res['size'] = size_analysis
-		# TODO export size_analysis here using below method to render
 
 		# what landmarks are https://pmc.ncbi.nlm.nih.gov/articles/PMC5713628/
 		left_landmarks, right_landmarks, center_h = pcv.homology.y_axis_pseudolandmarks(img=masked2, mask=roi_mask)
@@ -136,32 +130,6 @@ class Transformer:
 			'center_w':	center_w
 		}
 		res['landmarks'] = landmark_obj
-
-		# TODO export landmarks here using below method to render
-		# img_with_landmarks = masked2.copy()
-		# for landmark in top_landmarks:
-		# 	add_landmark(img_with_landmarks, landmark, (0, 0, 255))
-
-		# for landmark in btm_landmarks:
-		# 	add_landmark(img_with_landmarks, landmark, (0, 255, 0))
-
-		# for landmark in center_w:
-		# 	add_landmark(img_with_landmarks, landmark, (255, 0, 0))
-
-		# for landmark in left_landmarks:
-		# 	add_landmark(img_with_landmarks, landmark, (0, 0, 255))
-
-		# for landmark in right_landmarks:
-		# 	add_landmark(img_with_landmarks, landmark, (0, 255, 0))
-
-		# for landmark in center_h:
-		# 	add_landmark(img_with_landmarks, landmark, (255, 0, 0))
-
-		# cv2.imwrite(f"landmark_{filename}", cv2.cvtColor(img_with_landmarks, cv2.COLOR_RGB2BGR))
-
-
-		# this is to visualize color distribution
-		# TODO: export hist_figure plot with method below
 		
 		# color_analysis = pcv.analyze.color(rgb_img=img, labeled_mask=roi_mask, n_labels=1, colorspaces='all')
 		# color_analysis.save(f'color.png')
@@ -171,9 +139,7 @@ class Transformer:
 
 		hist_figure, _ = pcv.visualize.histogram(img=masked2, hist_data=True)
 		res['hist_before'] = hist_figure
-		# hist_figure.save(f'color.png')
 
-		# pcv.print_image(masked2, filename=f"gay_{filename}")
 		return res
 
 
