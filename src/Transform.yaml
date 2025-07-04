@@ -1,0 +1,22 @@
+# input path, can be directory
+src: /home/nszl/42cursus/leafaffliction/images/Apple_Black_rot/image (2).JPG
+
+# sensitivity for finary thresholding
+thres_a: 55
+
+# blur intensity
+gaus_k: 1
+
+# sensitivity for artifact cleaning
+artifact_thres_a: 115 
+artifact_thres_a2: 135
+artifact_thres_a3: 128
+
+# sensitivity to fill aritifact noise
+fill_n: 200 
+
+# absolute region of interest coordinates
+roi_x: 10
+roi_y: 10
+roi_height: 235
+roi_width: 235
