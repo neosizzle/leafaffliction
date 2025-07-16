@@ -1,0 +1,7 @@
+cache/*
+**/__pycache__/
+images/
+env/
+
+# too big
+*.zip
