@@ -4,6 +4,7 @@ import yaml
 import cv2
 from pathlib import Path
 from plantcv import plantcv as pcv
+import pickle
 
 from .classes.transformer import Transformer, generate_landmarks
 
@@ -15,6 +16,7 @@ def get_args():
 	parser.add_argument('-i', '--input_cfg', help='input config', type=str, default=default_config_path)
 	parser.add_argument('-id', '--id', help='experiment id for reports and cache', type=str, required=True)
 	parser.add_argument('-o', '--output_path', help='optional output path', type=str, default=None)
+	parser.add_argument('-ni', '--no_img', help='flag to omit image', action='store_true')
 	parser.add_argument('-nh', '--no_histogram', help='flag to omit histogram', action='store_true')
 	return parser.parse_args()
 
@@ -45,27 +47,34 @@ def main():
 			cache_out_path = args.output_path
 		cache_out_path = os.path.abspath(cache_out_path)		
 		Path(cache_out_path).mkdir(parents=True, exist_ok=True)
+		out_cache = []
+		
+		# path create
+		final_out_path = f"{cache_out_path}/{transformed_root}"
+		Path(final_out_path).mkdir(parents=True, exist_ok=True)
+
 		for entry in transformed[transformed_root]:
 			# print(entry.keys())
 			# print(entry['filename'])
 			filename = entry['filename']
 			landmark_img = generate_landmarks(entry['final'].copy(), entry['landmarks'])
+			out_cache.append(entry['final'])
 
-			# path create
-			final_out_path = f"{cache_out_path}/{transformed_root}"
-			Path(final_out_path).mkdir(parents=True, exist_ok=True)
-			
-			# export images
-			pcv.print_image(entry['input'], filename=f"{final_out_path}/{filename}")
-			pcv.print_image(entry['blur'], filename=f"{final_out_path}/blur_{filename}")
-			pcv.print_image(entry['masked'], filename=f"{final_out_path}/mask_{filename}")
-			pcv.print_image(entry['final'], filename=f"{final_out_path}/final_{filename}")
-			pcv.print_image(entry['size'], filename=f"{final_out_path}/size_{filename}")
-			cv2.imwrite(f"{final_out_path}/landmark_{filename}", cv2.cvtColor(landmark_img, cv2.COLOR_RGB2BGR))
-			cv2.imwrite(f"{final_out_path}/roi_{filename}", entry['roi'])
+			if not args.no_img:
+				# export images
+				pcv.print_image(entry['input'], filename=f"{final_out_path}/{filename}")
+				pcv.print_image(entry['blur'], filename=f"{final_out_path}/blur_{filename}")
+				pcv.print_image(entry['masked'], filename=f"{final_out_path}/mask_{filename}")
+				pcv.print_image(entry['final'], filename=f"{final_out_path}/final_{filename}")
+				pcv.print_image(entry['size'], filename=f"{final_out_path}/size_{filename}")
+				cv2.imwrite(f"{final_out_path}/landmark_{filename}", cv2.cvtColor(landmark_img, cv2.COLOR_RGB2BGR))
+				cv2.imwrite(f"{final_out_path}/roi_{filename}", entry['roi'])
 
 			if not args.no_histogram:
 				entry['hist_before'].save(f'{final_out_path}/hist_before_{filename}.png')
 				entry['hist_after'].save(f'{final_out_path}/hist_after_{filename}.png')
+		
+		with open(f"{final_out_path}/final.pkl", 'wb') as handle:
+			pickle.dump(out_cache, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 main()

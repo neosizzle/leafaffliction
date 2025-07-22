@@ -5,7 +5,7 @@
 
 Install dependencies (lazy to care about version locking)
 ```
-pip install flake8 argparse pyyaml plantcv
+pip install flake8 argparse pyyaml plantcv pickle
 ```
 
 Transform pipeline example `python -m src.Transform -id id1`
