@@ -1,6 +1,8 @@
 cache/*
 **/__pycache__/
 images/
+images_train/
+images_val/
 env/
 
 # too big
