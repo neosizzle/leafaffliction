@@ -18,10 +18,11 @@ def get_args():
 	parser.add_argument('-o', '--output_path', help='optional output path', type=str, default=None)
 	parser.add_argument('-ni', '--no_img', help='flag to omit image', action='store_true')
 	parser.add_argument('-nh', '--no_histogram', help='flag to omit histogram', action='store_true')
+
 	return parser.parse_args()
 
 def validate_params(data):
-	required_keys = ['src']
+	required_keys = ['src'] # TODO: fill this up
 	missing = [key for key in required_keys if key not in data]
 	if missing:
 		raise ValueError(f"{missing} is missing in config")
@@ -40,25 +41,36 @@ def main():
 	transformed = transformer.run()
 	root_path = os.path.dirname(__file__)
 	
-	for transformed_root in transformed.keys():
-		# perhaps need ot use out dir here?
-		cache_out_path = f"{root_path}/../cache/{args.id}/transformed/" 
-		if args.output_path is not None:
-			cache_out_path = args.output_path
-		cache_out_path = os.path.abspath(cache_out_path)		
-		Path(cache_out_path).mkdir(parents=True, exist_ok=True)
-		out_cache = []
-		
+	cache_out_path = f"{root_path}/../cache/{args.id}/transformed/" 
+	if args.output_path is not None:
+		cache_out_path = args.output_path
+	cache_out_path = os.path.abspath(cache_out_path)		
+	Path(cache_out_path).mkdir(parents=True, exist_ok=True)
+	out_cache_data = []
+	out_cache_target = []
+	class_map = {}
+
+	# create one hot encoding
+	i = 0
+	for transformed_root in transformed.keys():		
+		if transformed_root == '':
+			continue
+		class_map[transformed_root[1:]] = i
+		i += 1
+
+	for transformed_root in transformed.keys():		
 		# path create
 		final_out_path = f"{cache_out_path}/{transformed_root}"
 		Path(final_out_path).mkdir(parents=True, exist_ok=True)
 
 		for entry in transformed[transformed_root]:
 			# print(entry.keys())
-			# print(entry['filename'])
 			filename = entry['filename']
 			landmark_img = generate_landmarks(entry['final'].copy(), entry['landmarks'])
-			out_cache.append(entry['final'])
+			out_cache_data.append(entry['final'])
+			# TODO: one hot encoding target
+			out_cache_target.append(class_map[transformed_root[1:]])
+
 
 			if not args.no_img:
 				# export images
@@ -74,7 +86,11 @@ def main():
 				entry['hist_before'].save(f'{final_out_path}/hist_before_{filename}.png')
 				entry['hist_after'].save(f'{final_out_path}/hist_after_{filename}.png')
 		
-		with open(f"{final_out_path}/final.pkl", 'wb') as handle:
-			pickle.dump(out_cache, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
+	with open(f"{cache_out_path}/data.pkl", 'wb') as handle:
+		pickle.dump(out_cache_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	with open(f"{cache_out_path}/target.pkl", 'wb') as handle:
+		pickle.dump(out_cache_target, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	with open(f"{cache_out_path}/classmap.pkl", 'wb') as handle:
+		pickle.dump(class_map, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	
 main()
