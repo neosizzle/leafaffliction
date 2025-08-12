@@ -56,11 +56,11 @@ def main():
 
 	validate_params(params)
 
-	df = None
+	data = None
 	root_path = os.path.dirname(__file__)
 	labelled_cache_path = f"{root_path}/../cache/{args.id}/{args.data}"
 	with open(labelled_cache_path, "rb") as handle:
-		df = pickle.load(handle)
+		data = pickle.load(handle)
 
 	targets = None
 	outcomes_cache_path = f"{root_path}/../cache/{args.id}/{args.outcomes}"
@@ -72,10 +72,7 @@ def main():
 	with open(classmap_cache_path, "rb") as handle:
 		classmap = pickle.load(handle)
 
-	print(df)
-	print(targets)
-	print(classmap)
-	classifier = Classifier(params)
+	classifier = Classifier(params, data, targets, classmap)
 	res = classifier.run()
 
 main()

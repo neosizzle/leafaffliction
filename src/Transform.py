@@ -68,7 +68,7 @@ def main():
 			filename = entry['filename']
 			landmark_img = generate_landmarks(entry['final'].copy(), entry['landmarks'])
 			out_cache_data.append(entry['final'])
-			# TODO: one hot encoding target
+			# one hot encoding target
 			out_cache_target.append(class_map[transformed_root[1:]])
 
 
