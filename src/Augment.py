@@ -5,7 +5,7 @@ from pathlib import Path
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 
 import random
 random.seed(42)
@@ -15,9 +15,9 @@ augment_code_map = {
 	'all': 'all',
 	'f': 'Flip',
 	'r': 'Rotate',
-	'sk': 'Skew',
-	'sh': 'Shear',
-	'c': 'Crop',
+	's': 'Shear',
+	'c': 'Contrast',
+	'z': 'Zoom',
 	'd': 'Distortion'
 }
 
@@ -67,17 +67,56 @@ def run_augments(params):
 	
 	while n_files_left > 0:
 		source = os.path.abspath(f"{dir}/{source_files[n_files_left - 1]}")
+		# NOTE: assumes there is only 1 '.' in filename
+		tokens = source.split(".")
 
 		# mode is 'all', use all filters and add n_aug_filters to progress
 		if mode == 'all':
-			# TODO: image processing here
+			image = Image.open(source) 
+			image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
+			image_rot = image.rotate(90)
+			image_shear = image.transform(image.size, Image.AFFINE, (1, 0.1, 0, 0, 1, 0))
+			image_contrast = ImageEnhance.Contrast(image).enhance(2.0)
+			image_zoom = image.crop((10, 10, image.width - 10, image.height - 10)).resize(image.size, Image.Resampling.LANCZOS)
+			image_distort = image.filter(ImageFilter.SHARPEN)
+			
+			image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
+			image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))
+			image_shear.save('.'.join([tokens[0] + "_Shear", tokens[1]]))
+			image_contrast.save('.'.join([tokens[0] + "_Contrast", tokens[1]]))
+			image_zoom.save('.'.join([tokens[0] + "_Zoom", tokens[1]]))
+			image_distort.save('.'.join([tokens[0] + "_Distort", tokens[1]]))
+			
 			n_files_left -=  n_aug_filters
 		else:
-			# TODO: image processing here
+			image = Image.open(source) 
+			aug = aug_filters[mode]
+			if mode == 'random':
+				aug = random.choice(list(aug_filters.values()))
+			
+			if aug == 'Flip':
+				image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
+				image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
+			elif aug == 'Rotate':
+				image_rot = image.rotate(90)
+				image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))
+			elif aug == 'Shear':
+				image_shear = image.transform(image.size, Image.AFFINE, (1, 0.1, 0, 0, 1, 0))
+				image_shear.save('.'.join([tokens[0] + "_Shear", tokens[1]]))
+			elif aug == 'Contrast':
+				image_contrast = ImageEnhance.Contrast(image).enhance(2.0)
+				image_contrast.save('.'.join([tokens[0] + "_Contrast", tokens[1]]))
+			elif aug == 'Zoom':
+				image_zoom = image.crop((10, 10, image.width - 10, image.height - 10)).resize(image.size, Image.Resampling.LANCZOS)
+				image_zoom.save('.'.join([tokens[0] + "_Zoom", tokens[1]]))
+			elif aug == 'Distortion':
+				image_distort = image.filter(ImageFilter.SHARPEN)
+				image_distort.save('.'.join([tokens[0] + "_Distort", tokens[1]]))
+			else:
+				print(aug)
+				raise ValueError("Why are you cooking me bro?")
+
 			n_files_left -= 1
-
-		n_files_left -= 1
-
 	
 def get_args():
 	root_path = os.path.dirname(__file__)

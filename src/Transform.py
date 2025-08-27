@@ -53,8 +53,8 @@ def main():
 	# create one hot encoding
 	i = 0
 	for transformed_root in transformed.keys():		
-		if transformed_root == '':
-			continue
+		# if transformed_root == '':
+		# 	continue
 		class_map[transformed_root[1:]] = i
 		i += 1
 
@@ -70,7 +70,6 @@ def main():
 			out_cache_data.append(entry['final'])
 			# one hot encoding target
 			out_cache_target.append(class_map[transformed_root[1:]])
-
 
 			if not args.no_img:
 				# export images
