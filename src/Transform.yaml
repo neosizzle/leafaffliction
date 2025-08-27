@@ -1,7 +1,7 @@
 # input path, can be directory
 # src: /home/jun/42kl/leafaffliction/test_images
 # src: /home/nszl/42cursus/leafaffliction/test_images
-src: /home/nszl/42cursus/leafaffliction/images_train
+src: /home/jun/42kl/leafaffliction/images_train
 
 # sensitivity for finary thresholding
 thres_a: 55

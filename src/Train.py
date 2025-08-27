@@ -56,6 +56,8 @@ def main():
 
 	validate_params(params)
 
+	# TODO: Pixel Intensity Distribution Analysis
+
 	data = None
 	root_path = os.path.dirname(__file__)
 	labelled_cache_path = f"{root_path}/../cache/{args.id}/{args.data}"

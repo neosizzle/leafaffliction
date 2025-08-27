@@ -1,0 +1,9 @@
+# input and path, need to be a directory
+# NOTE: this will read and write from that specific directory
+dir: /home/jun/42kl/leafaffliction/images_train/Apple_rust
+
+# can be either random, all, f (Flip), r (Rotate), sk (Skew), sh (Shear), c (Crop), d (distortion)
+mode: all
+
+# must be a number, specify the number of total files desired in this dierctory
+count: 204

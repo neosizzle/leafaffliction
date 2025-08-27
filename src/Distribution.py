@@ -79,6 +79,12 @@ def main():
 	Path(report_out_path).mkdir(parents=True, exist_ok=True)
 	plot_diagrams(report_out_path, distrib)
 
+	# print mean of distributions
+	sum = 0
+	for key in distrib.keys():
+		sum += distrib[key]
+	print(f"mean: {sum / len(distrib.keys())}")
+
 	print(f"charts plotted at {report_out_path}")
 
 main()
