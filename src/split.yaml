@@ -3,9 +3,9 @@
 # out_train: /home/nszl/42cursus/leafaffliction/images_train
 # out_val: /home/nszl/42cursus/leafaffliction/images_val
 
-src: /home/jun/42kl/leafaffliction/images
-out_train: /home/jun/42kl/leafaffliction/images_train
-out_val: /home/jun/42kl/leafaffliction/images_val
+src: images
+out_train: images_train
+out_val: images_val
 
 # train/val split ratio
 ratio: 0.7

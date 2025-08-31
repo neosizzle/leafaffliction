@@ -1,2 +1,2 @@
 # train data path, need to be a directory
-src: /home/nszl/42cursus/leafaffliction/images_train
+src: images_train

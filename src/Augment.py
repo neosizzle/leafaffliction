@@ -66,7 +66,10 @@ def run_augments(params):
 	source_files = select_files(n_aug_filters * (n_files_left // n_aug_filters) if mode == 'all' else n_files_left, existing_files)
 	
 	while n_files_left > 0:
-		source = os.path.abspath(f"{dir}/{source_files[n_files_left - 1]}")
+		source_idx = n_files_left - 1
+		if source_idx >= len(source_files):
+			source_idx = len(source_files) - 1
+		source = os.path.abspath(f"{dir}/{source_files[source_idx]}")
 		# NOTE: assumes there is only 1 '.' in filename
 		tokens = source.split(".")
 

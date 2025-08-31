@@ -1,9 +1,16 @@
 # input and path, need to be a directory
 # NOTE: this will read and write from that specific directory
-dir: test_images/nested
+dir: images_train/Apple_Black_rot
+dir: images_train/Apple_healthy
+dir: images_train/Apple_rust
+dir: images_train/Apple_scab
+dir: images_train/Grape_Black_rot
+dir: images_train/Grape_Esca
+dir: images_train/Grape_healthy
+dir: images_train/Grape_spot
 
 # can be either random, all, f (Flip), r (Rotate), s (Skew/shear), c (Contrast), z (Zoom), d (distortion)
-mode: d
+mode: all
 
 # must be a number, specify the number of total files desired in this dierctory
-count: 20
+count: 1000

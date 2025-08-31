@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 from plantcv import plantcv as pcv
-
+import threading
 from pathlib import Path
 
 
@@ -148,18 +148,44 @@ class Transformer:
 
 		res = {}
 
+
 		if path.is_dir():
 			# this is already doing recursive deep search
 			for root, dirs, files in os.walk(path):
 				rel_path = root.replace(path.as_posix(), "")
 				res[rel_path] = []
 				print(f"{root}")
-				for file in files:
-					file_path = os.path.join(root, file)
-					print(f"{file_path}")
-					processed = self.image_process(file_path)
-					res[rel_path].append(processed)
-					# time.sleep(1)
+				thread_results = [None] * 4
+				split_files = [files[i::4] for i in range(4)]
+				
+				def process_files_in_thread(thread_index, files_subset):
+					results = []
+					for file in files_subset:
+						file_path = os.path.join(root, file)
+						print(f"{file_path}")
+						processed = self.image_process(file_path)
+						results.append(processed)
+					thread_results[thread_index] = results
+
+				threads = []
+				for i in range(4):
+					t = threading.Thread(target=process_files_in_thread, args=(i, split_files[i]))
+					threads.append(t)
+					t.start()
+
+				for t in threads:
+					t.join()
+
+				# join all results
+				for i in thread_results:
+					for j in i:
+						res[rel_path].append(j)
+				# for file in files:
+				# 	file_path = os.path.join(root, file)
+				# 	print(f"{file_path}")
+				# 	processed = self.image_process(file_path)
+				# 	# res[rel_path].append(processed)
+				# 	# time.sleep(1)
 			return res	
 		elif path.is_file():
 			res = {'': []}
