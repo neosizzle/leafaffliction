@@ -28,7 +28,8 @@ def select_files(n, files_list):
 		return random.sample(files_list, n)
 	else:
 		# Sample with replacement (repeats allowed)
-		return random.choices(files_list, k=n)
+		res = [*files_list, *random.choices(files_list, k=n - length)]
+		return res
 
 def check_and_print_image_metadata(file_path):
 	try:
@@ -55,7 +56,14 @@ def run_augments(params):
 	existing_files = os.listdir(dir)
 	
 	# do nothing if requirement is fulfilled
+	# remove files if requirement is overhwelmingly fulfilled
 	if len(existing_files) >= count_req:
+		n_surplus = len(existing_files) - count_req
+		files_to_remove = select_files(n_surplus, existing_files)
+		for f in files_to_remove:
+			source = os.path.abspath(f"{dir}/{f}")
+			os.remove(source)
+
 		return
 
 	n_files_left = count_req - len(existing_files)
@@ -100,6 +108,7 @@ def run_augments(params):
 			if aug == 'Flip':
 				image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
 				image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
+
 			elif aug == 'Rotate':
 				image_rot = image.rotate(90)
 				image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))

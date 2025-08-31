@@ -1,2 +1,2 @@
 # input path, need to be a directory
-src: images
+src: images_train

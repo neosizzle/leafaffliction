@@ -32,7 +32,7 @@ def build_cnn():
 	x = layers.Dense(64, activation='relu')(x)
 
 	# Output layer with 8 classes and softmax activation
-	outputs = layers.Dense(8, activation='softmax')(x)
+	outputs = layers.Dense(9, activation='softmax')(x)
 
 	model = models.Model(inputs=inputs, outputs=outputs)
 	return model
