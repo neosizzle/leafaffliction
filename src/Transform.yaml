@@ -15,7 +15,7 @@ artifact_thres_a2: 135
 artifact_thres_a3: 128
 
 # sensitivity to fill aritifact noise
-fill_n: 200 
+fill_n: 50 
 
 # absolute region of interest coordinates
 roi_x: 10

@@ -702,6 +702,7 @@ dependencies = [
     { name = "plantcv" },
     { name = "plotly" },
     { name = "pyyaml" },
+    { name = "scikeras" },
     { name = "tensorflow" },
 ]
 
@@ -712,6 +713,7 @@ requires-dist = [
     { name = "plantcv", specifier = ">=4.9" },
     { name = "plotly", specifier = ">=6.3.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "scikeras", specifier = ">=0.13.0" },
     { name = "tensorflow", specifier = ">=2.20.0" },
 ]
 
@@ -1793,6 +1795,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/9a/b4ec3629b7b447e896eec574469159b5b60b7781d3711c914748bf32de05/rpds_py-0.27.0-pp311-pypy311_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:59714ab0a5af25d723d8e9816638faf7f4254234decb7d212715c1aa71eee7be", size = 559460, upload-time = "2025-08-07T08:26:16.295Z" },
     { url = "https://files.pythonhosted.org/packages/61/63/d1e127b40c3e4733b3a6f26ae7a063cdf2bc1caa5272c89075425c7d397a/rpds_py-0.27.0-pp311-pypy311_pp73-musllinux_1_2_i686.whl", hash = "sha256:88051c3b7d5325409f433c5a40328fcb0685fc04e5db49ff936e910901d10114", size = 588072, upload-time = "2025-08-07T08:26:17.776Z" },
     { url = "https://files.pythonhosted.org/packages/04/7e/8ffc71a8f6833d9c9fb999f5b0ee736b8b159fd66968e05c7afc2dbcd57e/rpds_py-0.27.0-pp311-pypy311_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:181bc29e59e5e5e6e9d63b143ff4d5191224d355e246b5a48c88ce6b35c4e466", size = 555083, upload-time = "2025-08-07T08:26:19.301Z" },
+]
+
+[[package]]
+name = "scikeras"
+version = "0.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "keras" },
+    { name = "scikit-learn" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/b2/81d1f018259cb84e20a814622e67b1384edd0a584589f1a2bce5c5bdd8c9/scikeras-0.13.0.tar.gz", hash = "sha256:bfc720b2755f6c09981da13c9858e999a4bf775c49b0a296847dd1adad4c5d7d", size = 24154, upload-time = "2024-04-11T22:24:07.259Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ea/09/1c02aa24daf7a003c06f629fbb69dc9ae1bda1b247d7b8981e550d752ac9/scikeras-0.13.0-py3-none-any.whl", hash = "sha256:beeec4536129e316f8ffa56b32cbc097fa9168f3789feb243cadb8d9a36a0084", size = 26417, upload-time = "2024-04-11T22:24:06.101Z" },
 ]
 
 [[package]]

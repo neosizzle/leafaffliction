@@ -5,6 +5,7 @@ from plantcv import plantcv as pcv
 import threading
 from pathlib import Path
 
+N_THREADS = 2
 
 def add_landmark(img, landmark, color):
 	x = landmark[0][0]
@@ -56,17 +57,19 @@ class Transformer:
 		threshold_alpha = self.params['thres_a']
 		s_thresh = pcv.threshold.binary(s, threshold_alpha, 'light')
 
+		# Use another channel (LAB) to do grayscaling and join with the origninal
+		# grayscale method if we missed any features... needed?
+		b = pcv.rgb2gray_lab(img, 'a')
+		b_thresh = pcv.threshold.binary(b, 120, 'dark')
+		s_thresh = pcv.logical_or(s_thresh, b_thresh)
+		# s_thresh = b_thresh
+
 		# add some blur to smoothen noise
 		gaussian_k = self.params['gaus_k']
 		s_mblur = pcv.gaussian_blur(s_thresh, (gaussian_k, gaussian_k))
 
 		res['blur'] = s_mblur
 
-		# # Use another channel (LAB) to do grayscaling and join with the origninal
-		# # grayscale method if we missed any features... needed?
-		# b = pcv.rgb2gray_lab(img, 'b')
-		# b_thresh = pcv.threshold.binary(b, 160, 255, 'light')
-		# bs = pcv.logical_or(s_mblur, b_thresh)
 
 		# remove background, yayyyy
 		masked = pcv.apply_mask(img, s_mblur, 'white')
@@ -155,8 +158,8 @@ class Transformer:
 				rel_path = root.replace(path.as_posix(), "")
 				res[rel_path] = []
 				print(f"{root}")
-				thread_results = [None] * 4
-				split_files = [files[i::4] for i in range(4)]
+				thread_results = [None] * N_THREADS
+				split_files = [files[i::N_THREADS] for i in range(N_THREADS)]
 				
 				def process_files_in_thread(thread_index, files_subset):
 					results = []
@@ -168,7 +171,7 @@ class Transformer:
 					thread_results[thread_index] = results
 
 				threads = []
-				for i in range(4):
+				for i in range(N_THREADS):
 					t = threading.Thread(target=process_files_in_thread, args=(i, split_files[i]))
 					threads.append(t)
 					t.start()

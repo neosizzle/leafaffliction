@@ -1,2 +1,19 @@
 # train data path, need to be a directory
 src: images_train
+
+# Model hyper parameters
+hyper_params:
+  neural__batch_size:
+    - 32
+    - 64
+    - 128
+  neural__epochs:
+    - 5
+    - 10
+    - 15
+  neural__optimizer:
+    - adam
+    - sgd
+    - rmsprop
+  neural__model__loss:
+    - sparse_categorical_crossentropy

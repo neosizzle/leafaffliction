@@ -1,41 +1,92 @@
+import keras
+import tensorflow as tf
 from tensorflow.keras import layers, models, Input
 from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np
-from pathlib import Path
-from .transformer import Transformer
+from scikeras.wrappers import KerasClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import (
+    RandomizedSearchCV,
+	KFold
+)
 
 PIXEL_MAX = 255
+SEED = 42
 
-def build_cnn():
-	inputs = Input(shape=(256, 256, 3))  # Define the input layer explicitly
-	
-	# Normalize the inputs by scaling pixel values from [0, 255] to [0, 1]
-	x = layers.Rescaling(1./255)(inputs)
-	
-	# First convolutional block
-	x = layers.Conv2D(32, (3, 3), activation='relu')(x)
-	x = layers.MaxPooling2D((2, 2))(x)
-	x = layers.Dropout(0.5)(x)
+tf.random.set_seed(SEED)
 
-	# Second convolutional block
-	x = layers.Conv2D(64, (3, 3), activation='relu')(x)
-	x = layers.MaxPooling2D((2, 2))(x)
+INPUT_SHAPE = (256, 256, 3)
+N_OUTPUTS = 5
 
-	# Third convolutional block
-	x = layers.Conv2D(128, (3, 3), activation='relu')(x)
-	x = layers.MaxPooling2D((2, 2))(x)
+def build_cnn(
+		input_shape=(256, 256, 3),
+		n_outputs=5,
+		dense_nodes=64,
+		loss="sparse_categorical_crossentropy",
+		optimizer="adam",
+		**kwargs
+		):
+	layers_list = [
+        layers.InputLayer(input_shape=input_shape),
+		layers.Rescaling(1./255),
+		layers.Conv2D(32, (3, 3), activation='relu'),
+		layers.MaxPooling2D((2, 2)),
+		layers.Dropout(0.5),
+		layers.Conv2D(64, (3, 3), activation='relu'),
+		layers.MaxPooling2D((2, 2)),
+		layers.Conv2D(128, (3, 3), activation='relu'),
+		layers.MaxPooling2D((2, 2)),
+		layers.Flatten(),
+        layers.Dense(dense_nodes, activation='relu'),
+        layers.Dense(n_outputs, activation='softmax'),
+    ]
 
-	# Flatten the output from convolutional layers
-	x = layers.Flatten()(x)
-
-	# Fully connected dense layer
-	x = layers.Dense(64, activation='relu')(x)
-
-	# Output layer with 8 classes and softmax activation
-	outputs = layers.Dense(9, activation='softmax')(x)
-
-	model = models.Model(inputs=inputs, outputs=outputs)
+	model = keras.Sequential(layers_list, name="cnn_sequential")
+	model.compile(
+		optimizer=optimizer,  # type: ignore
+		loss=loss,  # grid can override
+		metrics=["accuracy"],
+		run_eagerly=True,
+	)
+	model.summary()
 	return model
+
+def create_pipeline_paramgrid(config):
+	def build_cnn_with_config(**kwargs):
+		return build_cnn(
+			input_shape=INPUT_SHAPE,
+			n_outputs=N_OUTPUTS,
+			**kwargs)
+	
+	PARAMETER_GRID = config['hyper_params']
+	
+
+	early_stopping = EarlyStopping(
+		monitor='accuracy',
+		mode='min',
+		patience=3,
+		restore_best_weights=True,
+		verbose=1
+	)
+
+	MODEL = KerasClassifier(
+		model=build_cnn_with_config,
+		optimizer=tf.keras.optimizers.Adam,  # type: ignore  # grid will override
+		metrics=["accuracy"],  # grid can override
+		epochs=30,  # grid will override
+		batch_size=32,  # grid will override
+		verbose=2,  # 0 = silent, 1 = progress bar, 2 = one line per epoch
+		random_state=42,
+		callbacks=[early_stopping]
+	)
+
+	pipeline_list = [('neural', MODEL)]
+	return (
+        Pipeline(
+            pipeline_list
+        ),
+        PARAMETER_GRID,
+    )
 
 class Classifier:
 	def __init__(self, params, data, targets, classmap, pred_model=None):
@@ -48,32 +99,54 @@ class Classifier:
 	# return the model
 	def run(self):
 		# min max normalization with known max value
-		input_data = self.data
-		target = self.targets
+		X_learn = self.data
+		y_learn = self.targets
+
+		(pipeline, PARAMETER_GRID) = create_pipeline_paramgrid(self.params)
+		tscv = KFold().split(X_learn)
+		grid = RandomizedSearchCV(
+            estimator=pipeline,
+            param_distributions=PARAMETER_GRID,
+            random_state=42,
+            n_jobs=1,
+            n_iter=3,  # Number of iterations for hyperparameter tuning
+            verbose=4,
+            cv=tscv,
+            scoring="accuracy",
+            error_score="raise",
+            return_train_score=True,
+        )
+		X_learn = X_learn.astype('float32')  # or np.float64, depending on your model
+		y_learn = y_learn.astype('int32')
+		grid.fit(X_learn, y_learn)
+		pipeline = grid.best_estimator_  # type: ignore
+
+		print("OK")
+
 		
-		early_stopping = EarlyStopping(
-			monitor='val_loss',
-			patience=5,
-			min_delta=0.001,
-			mode='min',
-			restore_best_weights=True,
-			verbose=1
-		)
-		model = build_cnn()
-		model.summary()
-		model.compile(
-			optimizer='adam',
-			loss='sparse_categorical_crossentropy',
-			metrics=['accuracy']
-		)
-		model.fit(
-			input_data,
-			target,
-			epochs=5,
-			batch_size=32,
-			validation_split=0.2,
-			callbacks=[early_stopping]
-			)
+		# early_stopping = EarlyStopping(
+		# 	monitor='val_loss',
+		# 	patience=5,
+		# 	min_delta=0.001,
+		# 	mode='min',
+		# 	restore_best_weights=True,
+		# 	verbose=1
+		# )
+		# model = build_cnn()
+		# model.summary()
+		# model.compile(
+		# 	optimizer='adam',
+		# 	loss='sparse_categorical_crossentropy',
+		# 	metrics=['accuracy']
+		# )
+		# model.fit(
+		# 	input_data,
+		# 	target,
+		# 	epochs=10,
+		# 	batch_size=32,
+		# 	validation_split=0.2,
+		# 	callbacks=[early_stopping]
+		# 	)
 		
 
 		# print(input_data.shape)

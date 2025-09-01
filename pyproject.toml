@@ -10,5 +10,6 @@ dependencies = [
     "plantcv>=4.9",
     "plotly>=6.3.0",
     "pyyaml>=6.0.2",
+    "scikeras>=0.13.0",
     "tensorflow>=2.20.0",
 ]

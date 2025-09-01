@@ -44,14 +44,7 @@ def check_and_print_image_metadata(file_path):
 	except (IOError, SyntaxError) as e:
 		print("File is not a valid image or cannot be opened.")
 
-def run_augments(params):
-	dir = Path(params['dir'])
-	mode = params['mode']
-	count_req = params['count']
-
-	if mode not in augment_code_map.keys():
-		raise ValueError(f"unknown mode {mode}: expected {augment_code_map.keys()}")
-
+def balance_dir(dir, mode, count_req):
 	# assume that the user always provides a valid file path
 	existing_files = os.listdir(dir)
 	
@@ -101,9 +94,7 @@ def run_augments(params):
 			n_files_left -=  n_aug_filters
 		else:
 			image = Image.open(source) 
-			aug = aug_filters[mode]
-			if mode == 'random':
-				aug = random.choice(list(aug_filters.values()))
+			aug = aug_filters[mode] if mode != 'random' else random.choice(list(aug_filters.values()))
 			
 			if aug == 'Flip':
 				image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
@@ -129,6 +120,19 @@ def run_augments(params):
 				raise ValueError("Why are you cooking me bro?")
 
 			n_files_left -= 1
+
+def run_augments(params):
+	dirs = params['dirs']
+	mode = params['mode']
+	count_req = params['count']
+
+	if mode not in augment_code_map.keys():
+		raise ValueError(f"unknown mode {mode}: expected {augment_code_map.keys()}")
+
+	for d in dirs:
+		dir = Path(d) 
+		balance_dir(dir, mode, count_req)
+
 	
 def get_args():
 	root_path = os.path.dirname(__file__)
@@ -139,7 +143,7 @@ def get_args():
 	return parser.parse_args()
 
 def validate_params(data):
-	required_keys = ['dir', 'mode', 'count']
+	required_keys = ['dirs', 'mode', 'count']
 	missing = [key for key in required_keys if key not in data]
 	if missing:
 		raise ValueError(f"{missing} is missing in config")
@@ -153,7 +157,7 @@ def main():
 		params = yaml.safe_load(file)
 
 	validate_params(params)
-	path = params['dir']
+	path = params['dirs']
 	run_augments(params)
 
 	print(f"Images are balanced at {path}")
