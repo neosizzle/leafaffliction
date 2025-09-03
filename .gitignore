@@ -2,9 +2,11 @@ cache/*
 reports/*
 **/__pycache__/
 images/
+images_apple/
 images_train/
 images_val/
 env/
+public/*.json
 
 # too big
 *.zip

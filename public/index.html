@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image Pair Viewer with Classmap</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        text-align: center;
+      }
+      img {
+        max-width: 45%;
+        margin: 10px;
+        border: 1px solid #ccc;
+      }
+      #buttons {
+        margin: 20px;
+      }
+      button {
+        margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+      #classmap {
+        margin-top: 40px;
+        text-align: left;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        background: #f9f9f9;
+        padding: 15px;
+        border: 1px solid #ddd;
+        white-space: pre-wrap;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Image Pair Viewer</h1>
+    <div>
+      <img id="inputImage" alt="Input Image" />
+      <img id="transformedImage" alt="Transformed Image" />
+    </div>
+
+    <div id="buttons">
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+    </div>
+
+    <h2>Prediction</h2>
+    <pre id="classmap">Loading classmap.json...</pre>
+
+    <script>
+      // Assuming n starts from 1 and goes to some max count, adjust maxCount accordingly
+      const maxCount = 100; // Change as needed
+      let currentIndex = 1;
+      let classmap = {};
+      let preds = [];
+
+      const inputImg = document.getElementById("inputImage");
+      const transformedImg = document.getElementById("transformedImage");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+
+      const getKeyByValue = (obj, value) =>
+        Object.keys(obj).find((key) => obj[key] === value);
+
+      function updateImages() {
+        inputImg.src = `images/input_${currentIndex}.png`;
+        transformedImg.src = `images/transformed_${currentIndex}.png`;
+        inputImg.alt = `Input Image ${currentIndex}`;
+        transformedImg.alt = `Transformed Image ${currentIndex}`;
+
+        // print predictions if have
+        if (preds.length > 1)
+          document.getElementById("classmap").textContent = getKeyByValue(
+            classmap,
+            preds[currentIndex]
+          );
+      }
+
+      prevBtn.addEventListener("click", () => {
+        if (currentIndex > 1) {
+          currentIndex--;
+          updateImages();
+        }
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if (currentIndex < maxCount) {
+          currentIndex++;
+          updateImages();
+        }
+      });
+
+      // Initial load
+      updateImages();
+
+      // Load classmap.json and display content
+      fetch("classmap.json")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to load classmap.json");
+          }
+          return response.json();
+        })
+        .then((cm) => {
+          // fetch preductions
+          fetch("pred.json")
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Failed to load pred.json");
+              }
+              return response.json();
+            })
+            .then((ps) => {
+              classmap = cm;
+              preds = ps["pred"];
+              updateImages();
+            })
+            .catch((error) => {
+              document.getElementById(
+                "classmap"
+              ).textContent = `Error loading pred: ${error.message}`;
+            });
+        })
+        .catch((error) => {
+          document.getElementById(
+            "classmap"
+          ).textContent = `Error loading classmap: ${error.message}`;
+        });
+    </script>
+  </body>
+</html>

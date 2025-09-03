@@ -6,8 +6,12 @@ import numpy as np
 from scikeras.wrappers import KerasClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import (
-    RandomizedSearchCV,
+	RandomizedSearchCV,
 	KFold
+)
+from sklearn.metrics import (
+	accuracy_score,
+	balanced_accuracy_score
 )
 
 PIXEL_MAX = 255
@@ -27,7 +31,7 @@ def build_cnn(
 		**kwargs
 		):
 	layers_list = [
-        layers.InputLayer(input_shape=input_shape),
+		layers.InputLayer(shape=input_shape),
 		layers.Rescaling(1./255),
 		layers.Conv2D(32, (3, 3), activation='relu'),
 		layers.MaxPooling2D((2, 2)),
@@ -37,9 +41,9 @@ def build_cnn(
 		layers.Conv2D(128, (3, 3), activation='relu'),
 		layers.MaxPooling2D((2, 2)),
 		layers.Flatten(),
-        layers.Dense(dense_nodes, activation='relu'),
-        layers.Dense(n_outputs, activation='softmax'),
-    ]
+		layers.Dense(dense_nodes, activation='relu'),
+		layers.Dense(n_outputs, activation='softmax'),
+	]
 
 	model = keras.Sequential(layers_list, name="cnn_sequential")
 	model.compile(
@@ -82,11 +86,11 @@ def create_pipeline_paramgrid(config):
 
 	pipeline_list = [('neural', MODEL)]
 	return (
-        Pipeline(
-            pipeline_list
-        ),
-        PARAMETER_GRID,
-    )
+		Pipeline(
+			pipeline_list
+		),
+		PARAMETER_GRID,
+	)
 
 class Classifier:
 	def __init__(self, params, data, targets, classmap, pred_model=None):
@@ -97,60 +101,70 @@ class Classifier:
 		self.pred_model = pred_model
 
 	# return the model
-	def run(self):
+	def run_train(self):
 		# min max normalization with known max value
 		X_learn = self.data
 		y_learn = self.targets
 
 		(pipeline, PARAMETER_GRID) = create_pipeline_paramgrid(self.params)
-		tscv = KFold().split(X_learn)
+		tscv = KFold(n_splits=3).split(X_learn)
 		grid = RandomizedSearchCV(
-            estimator=pipeline,
-            param_distributions=PARAMETER_GRID,
-            random_state=42,
-            n_jobs=1,
-            n_iter=3,  # Number of iterations for hyperparameter tuning
-            verbose=4,
-            cv=tscv,
-            scoring="accuracy",
-            error_score="raise",
-            return_train_score=True,
-        )
+			estimator=pipeline,
+			param_distributions=PARAMETER_GRID,
+			random_state=42,
+			n_jobs=2,
+			n_iter=12,  # Number of iterations for hyperparameter tuning
+			verbose=4,
+			cv=tscv,
+			scoring="accuracy",
+			error_score="raise",
+			return_train_score=True,
+		)
 		X_learn = X_learn.astype('float32')  # or np.float64, depending on your model
 		y_learn = y_learn.astype('int32')
 		grid.fit(X_learn, y_learn)
 		pipeline = grid.best_estimator_  # type: ignore
 
-		print("OK")
+		predictions = pipeline.predict(X_learn)  # type: ignore
+		# Calculate metrics
+		acc = accuracy_score(y_learn, predictions)
+		b_acc = balanced_accuracy_score(y_learn, predictions)
+		print("\n====PREDICTIONS=====")
+		print(predictions)
+		print(f"\nAccuracy: {acc:.4f}")
+		print(f"Balanced accuracy (b_acc): {b_acc:.4f}")
 
-		
-		# early_stopping = EarlyStopping(
-		# 	monitor='val_loss',
-		# 	patience=5,
-		# 	min_delta=0.001,
-		# 	mode='min',
-		# 	restore_best_weights=True,
-		# 	verbose=1
-		# )
-		# model = build_cnn()
-		# model.summary()
-		# model.compile(
-		# 	optimizer='adam',
-		# 	loss='sparse_categorical_crossentropy',
-		# 	metrics=['accuracy']
-		# )
-		# model.fit(
-		# 	input_data,
-		# 	target,
-		# 	epochs=10,
-		# 	batch_size=32,
-		# 	validation_split=0.2,
-		# 	callbacks=[early_stopping]
-		# 	)
-		
+		train_report = {
+			"acc": acc,
+			"b_acc": b_acc,
+		}
+		report = {
+			'train': train_report
+		}
 
-		# print(input_data.shape)
-		# print(self.classmap)
+		return (report, pipeline)
 
-		# convert into tensors
-		pass
+	def run_predict(self):
+		pipeline = self.pred_model
+
+		# prediction
+		predictions = pipeline.predict(X=self.data)
+
+		# Calculate metrics
+		acc = accuracy_score(self.targets, predictions)
+		b_acc = balanced_accuracy_score(self.targets, predictions)
+
+		print(f"\nAccuracy: {acc:.4f}")
+		print(f"Balanced accuracy (b_acc): {b_acc:.4f}")
+
+		train_report = {
+			"acc": acc,
+			"b_acc": b_acc,
+		}
+
+
+		report = {
+			"all": train_report,
+		}
+
+		return (report, predictions)
