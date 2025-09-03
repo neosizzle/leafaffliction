@@ -160,6 +160,7 @@ class Classifier:
 		train_report = {
 			"acc": acc,
 			"b_acc": b_acc,
+			'len': len(predictions)
 		}
 
 
