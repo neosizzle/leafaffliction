@@ -32,7 +32,7 @@ def build_cnn(
 		):
 	layers_list = [
 		layers.InputLayer(shape=input_shape),
-		layers.Rescaling(1./255),
+		layers.Rescaling(1./PIXEL_MAX),
 		layers.Conv2D(32, (3, 3), activation='relu'),
 		layers.MaxPooling2D((2, 2)),
 		layers.Dropout(0.5),
@@ -113,7 +113,7 @@ class Classifier:
 			param_distributions=PARAMETER_GRID,
 			random_state=42,
 			n_jobs=2,
-			n_iter=12,  # Number of iterations for hyperparameter tuning
+			n_iter=3,  # Number of iterations for hyperparameter tuning
 			verbose=4,
 			cv=tscv,
 			scoring="accuracy",
