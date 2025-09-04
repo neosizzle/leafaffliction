@@ -1,3 +1,5 @@
+output_classes: 5
+
 # Model hyper parameters
 hyper_params:
   neural__batch_size:
@@ -14,3 +16,7 @@ hyper_params:
     - rmsprop
   neural__model__loss:
     - sparse_categorical_crossentropy
+  neural__model__dense_nodes:
+    - 128
+    - 64
+    - 267

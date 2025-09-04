@@ -20,7 +20,6 @@ SEED = 42
 tf.random.set_seed(SEED)
 
 INPUT_SHAPE = (256, 256, 3)
-N_OUTPUTS = 5
 
 def build_cnn(
 		input_shape=(256, 256, 3),
@@ -59,7 +58,7 @@ def create_pipeline_paramgrid(config):
 	def build_cnn_with_config(**kwargs):
 		return build_cnn(
 			input_shape=INPUT_SHAPE,
-			n_outputs=N_OUTPUTS,
+			n_outputs=config['output_classes'],
 			**kwargs)
 	
 	PARAMETER_GRID = config['hyper_params']
@@ -67,10 +66,9 @@ def create_pipeline_paramgrid(config):
 
 	early_stopping = EarlyStopping(
 		monitor='accuracy',
-		mode='min',
 		patience=3,
-		restore_best_weights=True,
-		verbose=1
+		verbose=1,
+		start_from_epoch=3,
 	)
 
 	MODEL = KerasClassifier(
@@ -112,7 +110,7 @@ class Classifier:
 			estimator=pipeline,
 			param_distributions=PARAMETER_GRID,
 			random_state=42,
-			n_jobs=2,
+			n_jobs=1,
 			n_iter=3,  # Number of iterations for hyperparameter tuning
 			verbose=4,
 			cv=tscv,
