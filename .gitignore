@@ -3,6 +3,7 @@ reports/*
 **/__pycache__/
 images/
 images_apple/
+images_grape/
 images_train/
 images_val/
 env/
