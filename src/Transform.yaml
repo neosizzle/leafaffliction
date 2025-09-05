@@ -4,7 +4,8 @@
 src: images_train
 
 # sensitivity for finary thresholding
-thres_a: 55
+# thres_a: 55 # for apples
+thres_a: 45
 
 # blur intensity
 gaus_k: 1

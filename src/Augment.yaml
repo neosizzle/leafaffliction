@@ -1,16 +1,16 @@
 # input and path, need to be a directory
 # NOTE: this will read and write from that specific directory
-# dirs:
-#   - images_train/Grape_Black_rot
-#   - images_train/Grape_Esca
-#   - images_train/Grape_healthy
-#   - images_train/Grape_spot
-
 dirs:
-  - images_train/Apple_Black_rot
-  - images_train/Apple_healthy
-  - images_train/Apple_rust
-  - images_train/Apple_scab
+  - images_train/Grape_Black_rot
+  - images_train/Grape_Esca
+  - images_train/Grape_healthy
+  - images_train/Grape_spot
+
+# dirs:
+#   - images_train/Apple_Black_rot
+#   - images_train/Apple_healthy
+#   - images_train/Apple_rust
+#   - images_train/Apple_scab
 
 # can be either random, all, f (Flip), r (Rotate), s (Skew/shear), c (Contrast), z (Zoom), d (distortion)
 mode: all
