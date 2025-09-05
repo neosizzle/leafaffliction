@@ -111,4 +111,5 @@ def main():
 	pipeline_cache_path = os.path.abspath(pipeline_cache_path)
 	with open(pipeline_cache_path, "wb") as f:
 		joblib.dump(pipeline, f)
+	print(f"model saved to {model_cache_out_path}")
 main()

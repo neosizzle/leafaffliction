@@ -13,6 +13,7 @@ from sklearn.metrics import (
 	accuracy_score,
 	balanced_accuracy_score
 )
+from sklearn.model_selection import train_test_split
 
 PIXEL_MAX = 255
 SEED = 42
@@ -24,7 +25,7 @@ INPUT_SHAPE = (256, 256, 3)
 def build_cnn(
 		input_shape=(256, 256, 3),
 		n_outputs=5,
-		dense_nodes=64,
+		dense_nodes=128,
 		loss="sparse_categorical_crossentropy",
 		optimizer="adam",
 		**kwargs
@@ -34,7 +35,7 @@ def build_cnn(
 		layers.Rescaling(1./PIXEL_MAX),
 		layers.Conv2D(32, (3, 3), activation='relu'),
 		layers.MaxPooling2D((2, 2)),
-		layers.Dropout(0.5),
+		layers.Dropout(0.2),
 		layers.Conv2D(64, (3, 3), activation='relu'),
 		layers.MaxPooling2D((2, 2)),
 		layers.Conv2D(128, (3, 3), activation='relu'),
@@ -65,18 +66,19 @@ def create_pipeline_paramgrid(config):
 	
 
 	early_stopping = EarlyStopping(
-		monitor='accuracy',
+		monitor='val_loss',
 		patience=3,
 		verbose=1,
 		start_from_epoch=3,
+		restore_best_weights=True
 	)
 
 	MODEL = KerasClassifier(
 		model=build_cnn_with_config,
 		optimizer=tf.keras.optimizers.Adam,  # type: ignore  # grid will override
 		metrics=["accuracy"],  # grid can override
-		epochs=30,  # grid will override
-		batch_size=32,  # grid will override
+		epochs=10,  # grid will override
+		batch_size=64,  # grid will override
 		verbose=2,  # 0 = silent, 1 = progress bar, 2 = one line per epoch
 		random_state=42,
 		callbacks=[early_stopping]
@@ -104,6 +106,9 @@ class Classifier:
 		X_learn = self.data
 		y_learn = self.targets
 
+		# X_learn, X_test, y_learn, y_test = train_test_split(self.data, self.targets, test_size=0.1, random_state=42)
+		# print(f"{self.data.shape} {self.targets.shape} {X_learn.shape} {X_test.shape} {y_learn.shape} {y_test.shape}")
+
 		(pipeline, PARAMETER_GRID) = create_pipeline_paramgrid(self.params)
 		tscv = KFold(n_splits=3).split(X_learn)
 		grid = RandomizedSearchCV(
@@ -118,10 +123,12 @@ class Classifier:
 			error_score="raise",
 			return_train_score=True,
 		)
-		X_learn = X_learn.astype('float32')  # or np.float64, depending on your model
+		X_learn = X_learn.astype('float32')
 		y_learn = y_learn.astype('int32')
-		grid.fit(X_learn, y_learn)
-		pipeline = grid.best_estimator_  # type: ignore
+		# grid.fit(X_learn, y_learn)
+		# pipeline = grid.best_estimator_  # type: ignore
+
+		pipeline.fit(X_learn, y_learn, neural__validation_split=0.1)
 
 		predictions = pipeline.predict(X_learn)  # type: ignore
 		# Calculate metrics

@@ -90,13 +90,14 @@ def main():
 	public_img_path = f"{root_path}/../public/images"
 	public_img_path = os.path.abspath(public_img_path)
 	Path(public_img_path).mkdir(parents=True, exist_ok=True)
+	id = 0
 	for transformed_root in transformed.keys():
-		for i, entry in enumerate(transformed[transformed_root]):
+		for entry in transformed[transformed_root]:
 			features.append(entry['final'])
 			targets.append(classmap[transformed_root[1:]])
-			pcv.print_image(entry['input'], filename=f"{public_img_path}/input_{i}.png")
-			pcv.print_image(entry['final'], filename=f"{public_img_path}/transformed_{i}.png")
-
+			pcv.print_image(entry['input'], filename=f"{public_img_path}/input_{id}.png")
+			pcv.print_image(entry['final'], filename=f"{public_img_path}/transformed_{id}.png")
+			id += 1
 
 	# Load Model Sequentially
 	pipeline_cache_path = os.path.abspath(

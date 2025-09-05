@@ -1,7 +1,7 @@
 # prediction data path, need to be a directory with all the test data
 # we will be doing transformation in this layer and not from cached pipeline, this is 
 transformer_params:
-  src: images_train
+  src: images_val
 
   # sensitivity for finary thresholding
   thres_a: 55

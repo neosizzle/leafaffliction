@@ -8,4 +8,4 @@ out_train: images_train
 out_val: images_val
 
 # train/val split ratio
-ratio: 0.8
+ratio: 0.85
