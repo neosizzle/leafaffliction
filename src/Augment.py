@@ -2,164 +2,202 @@ import os
 import argparse
 import yaml
 from pathlib import Path
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import pandas as pd
+# import plotly.graph_objects as go
+# from plotly.subplots import make_subplots
+# import pandas as pd
 from PIL import Image, ImageEnhance, ImageFilter
 
 import random
 random.seed(42)
 
 augment_code_map = {
-	'random': 'random',
-	'all': 'all',
-	'f': 'Flip',
-	'r': 'Rotate',
-	's': 'Shear',
-	'c': 'Contrast',
-	'z': 'Zoom',
-	'd': 'Distortion'
+    'random': 'random',
+    'all': 'all',
+    'f': 'Flip',
+    'r': 'Rotate',
+    's': 'Shear',
+    'c': 'Contrast',
+    'z': 'Zoom',
+    'd': 'Distortion'
 }
 
+
 def select_files(n, files_list):
-	length = len(files_list)
-	if n <= length:
-		# Sample without replacement (unique elements)
-		return random.sample(files_list, n)
-	else:
-		# Sample with replacement (repeats allowed)
-		res = [*files_list, *random.choices(files_list, k=n - length)]
-		return res
+    length = len(files_list)
+    if n <= length:
+        # Sample without replacement (unique elements)
+        return random.sample(files_list, n)
+    else:
+        # Sample with replacement (repeats allowed)
+        res = [*files_list, *random.choices(files_list, k=n - length)]
+        return res
+
 
 def check_and_print_image_metadata(file_path):
-	try:
-		with Image.open(file_path) as img:
-			img.verify()  # Verify if it is an image
-		with Image.open(file_path) as img:
-			print(f"Image format: {img.format}")
-			print(f"Image size: {img.size}")
-			print(f"Image mode: {img.mode}")
-			print(f"Image info metadata: {img.info}")
-			print("========")
-	except (IOError, SyntaxError) as e:
-		print("File is not a valid image or cannot be opened.")
+    try:
+        with Image.open(file_path) as img:
+            img.verify()  # Verify if it is an image
+        with Image.open(file_path) as img:
+            print(f"Image format: {img.format}")
+            print(f"Image size: {img.size}")
+            print(f"Image mode: {img.mode}")
+            print(f"Image info metadata: {img.info}")
+            print("========")
+    except (IOError, SyntaxError):
+        print("File is not a valid image or cannot be opened.")
+
 
 def balance_dir(dir, mode, count_req):
-	# assume that the user always provides a valid file path
-	existing_files = os.listdir(dir)
-	
-	# do nothing if requirement is fulfilled
-	# remove files if requirement is overhwelmingly fulfilled
-	if len(existing_files) >= count_req:
-		n_surplus = len(existing_files) - count_req
-		files_to_remove = select_files(n_surplus, existing_files)
-		for f in files_to_remove:
-			source = os.path.abspath(f"{dir}/{f}")
-			os.remove(source)
+    # assume that the user always provides a valid file path
+    existing_files = os.listdir(dir)
 
-		return
+    # do nothing if requirement is fulfilled
+    # remove files if requirement is overhwelmingly fulfilled
+    if len(existing_files) >= count_req:
+        n_surplus = len(existing_files) - count_req
+        files_to_remove = select_files(n_surplus, existing_files)
+        for f in files_to_remove:
+            source = os.path.abspath(f"{dir}/{f}")
+            os.remove(source)
 
-	n_files_left = count_req - len(existing_files)
+        return
 
-	# for modes except 'all', they will need to pick from the existing files to fulfill all requirements
-	aug_filters = {k: v for k, v in augment_code_map.items() if k not in ('random', 'all')}
-	n_aug_filters = len(aug_filters.keys())
-	source_files = select_files(n_aug_filters * (n_files_left // n_aug_filters) if mode == 'all' else n_files_left, existing_files)
-	
-	while n_files_left > 0:
-		source_idx = n_files_left - 1
-		if source_idx >= len(source_files):
-			source_idx = len(source_files) - 1
-		source = os.path.abspath(f"{dir}/{source_files[source_idx]}")
-		# NOTE: assumes there is only 1 '.' in filename
-		tokens = source.split(".")
+    n_files_left = count_req - len(existing_files)
 
-		# mode is 'all', use all filters and add n_aug_filters to progress
-		if mode == 'all':
-			image = Image.open(source) 
-			image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
-			image_rot = image.rotate(90)
-			image_shear = image.transform(image.size, Image.AFFINE, (1, 0.1, 0, 0, 1, 0))
-			image_contrast = ImageEnhance.Contrast(image).enhance(2.0)
-			image_zoom = image.crop((10, 10, image.width - 10, image.height - 10)).resize(image.size, Image.Resampling.LANCZOS)
-			image_distort = image.filter(ImageFilter.SHARPEN)
-			
-			image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
-			image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))
-			image_shear.save('.'.join([tokens[0] + "_Shear", tokens[1]]))
-			image_contrast.save('.'.join([tokens[0] + "_Contrast", tokens[1]]))
-			image_zoom.save('.'.join([tokens[0] + "_Zoom", tokens[1]]))
-			image_distort.save('.'.join([tokens[0] + "_Distort", tokens[1]]))
-			
-			n_files_left -=  n_aug_filters
-		else:
-			image = Image.open(source) 
-			aug = aug_filters[mode] if mode != 'random' else random.choice(list(aug_filters.values()))
-			
-			if aug == 'Flip':
-				image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
-				image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
+    # for modes except 'all' they will need to
+    # pick from the existing files to fulfill all requirements
+    aug_filters = {
+        k: v for k, v in augment_code_map.items() if k not in ('random', 'all')
+    }
+    n_aug_filters = len(aug_filters.keys())
+    source_files = select_files(
+        n_aug_filters * (n_files_left // n_aug_filters)
+        if mode == 'all'
+        else n_files_left, existing_files
+    )
 
-			elif aug == 'Rotate':
-				image_rot = image.rotate(90)
-				image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))
-			elif aug == 'Shear':
-				image_shear = image.transform(image.size, Image.AFFINE, (1, 0.1, 0, 0, 1, 0))
-				image_shear.save('.'.join([tokens[0] + "_Shear", tokens[1]]))
-			elif aug == 'Contrast':
-				image_contrast = ImageEnhance.Contrast(image).enhance(2.0)
-				image_contrast.save('.'.join([tokens[0] + "_Contrast", tokens[1]]))
-			elif aug == 'Zoom':
-				image_zoom = image.crop((10, 10, image.width - 10, image.height - 10)).resize(image.size, Image.Resampling.LANCZOS)
-				image_zoom.save('.'.join([tokens[0] + "_Zoom", tokens[1]]))
-			elif aug == 'Distortion':
-				image_distort = image.filter(ImageFilter.SHARPEN)
-				image_distort.save('.'.join([tokens[0] + "_Distort", tokens[1]]))
-			else:
-				print(aug)
-				raise ValueError("Why are you cooking me bro?")
+    while n_files_left > 0:
+        source_idx = n_files_left - 1
+        if source_idx >= len(source_files):
+            source_idx = len(source_files) - 1
+        source = os.path.abspath(f"{dir}/{source_files[source_idx]}")
+        # NOTE: assumes there is only 1 '.' in filename
+        tokens = source.split(".")
 
-			n_files_left -= 1
+        # mode is 'all', use all filters and add n_aug_filters to progress
+        if mode == 'all':
+            shear_vals = (1, 0.1, 0, 0, 1, 0)
+            image = Image.open(source)
+            image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
+            image_rot = image.rotate(90)
+            image_shear = image.transform(image.size, Image.AFFINE, shear_vals)
+            image_contrast = ImageEnhance.Contrast(image).enhance(2.0)
+            image_zoom = image.crop(
+                (10, 10, image.width - 10, image.height - 10)
+                ).resize(image.size, Image.Resampling.LANCZOS)
+            image_distort = image.filter(ImageFilter.SHARPEN)
+
+            image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
+            image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))
+            image_shear.save('.'.join([tokens[0] + "_Shear", tokens[1]]))
+            image_contrast.save('.'.join([tokens[0] + "_Contrast", tokens[1]]))
+            image_zoom.save('.'.join([tokens[0] + "_Zoom", tokens[1]]))
+            image_distort.save('.'.join([tokens[0] + "_Distort", tokens[1]]))
+
+            n_files_left -= n_aug_filters
+        else:
+            image = Image.open(source)
+            aug = (
+                aug_filters[mode]
+                if mode != "random"
+                else random.choice(list(aug_filters.values()))
+            )
+
+            if aug == 'Flip':
+                image_flip = image.transpose(Image.FLIP_LEFT_RIGHT)
+                image_flip.save('.'.join([tokens[0] + "_Flip", tokens[1]]))
+
+            elif aug == 'Rotate':
+                image_rot = image.rotate(90)
+                image_rot.save('.'.join([tokens[0] + "_Rotate", tokens[1]]))
+            elif aug == 'Shear':
+                shear_vals = (1, 0.1, 0, 0, 1, 0)
+                image_shear = image.transform(
+                    image.size, Image.AFFINE, shear_vals
+                    )
+                image_shear.save('.'.join([tokens[0] + "_Shear", tokens[1]]))
+            elif aug == 'Contrast':
+                image_contrast = ImageEnhance.Contrast(image).enhance(2.0)
+                image_contrast.save('.'.join(
+                    [tokens[0] + "_Contrast", tokens[1]]
+                    ))
+            elif aug == 'Zoom':
+                image_zoom = image.crop(
+                    (10, 10, image.width - 10, image.height - 10)
+                ).resize(image.size, Image.Resampling.LANCZOS)
+                image_zoom.save('.'.join([tokens[0] + "_Zoom", tokens[1]]))
+            elif aug == 'Distortion':
+                image_distort = image.filter(ImageFilter.SHARPEN)
+                image_distort.save(
+                    '.'.join([tokens[0] + "_Distort", tokens[1]])
+                    )
+            else:
+                print(aug)
+                raise ValueError("Why are you cooking me bro?")
+
+            n_files_left -= 1
+
 
 def run_augments(params):
-	dirs = params['dirs']
-	mode = params['mode']
-	count_req = params['count']
+    dirs = params['dirs']
+    mode = params['mode']
+    count_req = params['count']
 
-	if mode not in augment_code_map.keys():
-		raise ValueError(f"unknown mode {mode}: expected {augment_code_map.keys()}")
+    if mode not in augment_code_map.keys():
+        raise ValueError(
+            f"unknown mode {mode}: expected {augment_code_map.keys()}"
+            )
 
-	for d in dirs:
-		dir = Path(d) 
-		balance_dir(dir, mode, count_req)
+    for d in dirs:
+        dir = Path(d)
+        balance_dir(dir, mode, count_req)
 
-	
+
 def get_args():
-	root_path = os.path.dirname(__file__)
-	default_config_path = f"{root_path}/Augment.yaml"
+    root_path = os.path.dirname(__file__)
+    default_config_path = f"{root_path}/Augment.yaml"
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-i', '--input_cfg', help='input config', type=str, default=default_config_path)
-	return parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-i',
+        '--input_cfg',
+        help='input config',
+        type=str,
+        default=default_config_path
+        )
+    return parser.parse_args()
+
 
 def validate_params(data):
-	required_keys = ['dirs', 'mode', 'count']
-	missing = [key for key in required_keys if key not in data]
-	if missing:
-		raise ValueError(f"{missing} is missing in config")
+    required_keys = ['dirs', 'mode', 'count']
+    missing = [key for key in required_keys if key not in data]
+    if missing:
+        raise ValueError(f"{missing} is missing in config")
+
 
 def main():
-	args = get_args()
-	param_file = args.input_cfg
+    args = get_args()
+    param_file = args.input_cfg
 
-	params = None
-	with open(param_file, 'r') as file:
-		params = yaml.safe_load(file)
+    params = None
+    with open(param_file, 'r') as file:
+        params = yaml.safe_load(file)
 
-	validate_params(params)
-	path = params['dirs']
-	run_augments(params)
+    validate_params(params)
+    path = params['dirs']
+    run_augments(params)
 
-	print(f"Images are balanced at {path}")
+    print(f"Images are balanced at {path}")
+
 
 main()
