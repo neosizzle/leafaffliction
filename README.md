@@ -2,9 +2,22 @@
 A simple computer vision pipeline to detect leaf diseases
 
 ## Installation and usage
-- Requirements: `python 3.10.12, uv`
+Requirements: `python 3.10.12, uv`
+
+Run analysis `uv run -m src.Distribution -id id1`
+
+Run Augmentation `uv run -m src.Augment`
 
 Transform pipeline example `uv run -m src.Transform -id id1`
+
+Run training `uv run -m src.Train -id id1`
+
+Run prediction `uv run -m src.Predict -id id1`
+
+## Pipeline architecture
+![image](https://hackmd.io/_uploads/HkFGB2fogg.png)
+
+> https://excalidraw.com/#json=PmsJz27_wdpsv55bFj0oH,b6TG0WYvzSmgmc3pKZPhtQ
 
 ## Preprocessing 
 Some analysis is done on the dataset to ensure fundamental data integrity, it is found that the dataset provided contains label imbalance.
