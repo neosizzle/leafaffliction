@@ -1,12 +1,13 @@
 import os
 import cv2
-from plantcv import plantcv as pcv
 import threading
-import pcv.homology.y_axis_pseudolandmarks as y_plm
-import pcv.homology.x_axis_pseudolandmarks as x_plm
+from plantcv import plantcv as pcv
+
 from pathlib import Path
 
 N_THREADS = 2
+y_plm = pcv.homology.y_axis_pseudolandmarks
+x_plm = pcv.homology.x_axis_pseudolandmarks
 
 
 def add_landmark(img, landmark, color):
